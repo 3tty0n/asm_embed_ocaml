@@ -21,3 +21,7 @@ void call_caml_f(int arg) {
   }
   caml_callback(*closure_f, Val_int(arg));
 }
+
+void run_caml_f(int arg, char** argv) {
+	call_caml_f(arg);
+}
