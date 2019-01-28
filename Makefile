@@ -1,6 +1,10 @@
 CC := gcc
 CFLAGS :=
-OCAMLOPT := ocamlopt.opt
+OCAMLC := ocamlc
+
+ifdef 32bit
+	CFLAGS += -m32
+endif
 
 APP := main
 
@@ -11,16 +15,16 @@ OBJS := $(CSRCS:%.c=%.o) $(MLSRCS:%.ml=%.o)
 .SUFFIXES: .ml .o .c
 
 %.o: %.ml
-	$(OCAMLOPT) -output-obj $< -o $(basename $<).o
+	$(OCAMLC) -output-obj $< -o $(basename $<).o
 
 %.o: %.c
 	$(eval ocamlc_where := $(shell ocamlc -where))
-	$(CC) -c $< -I$(ocamlc_where)
+	$(CC) $(CFLAGS) -c $< -I$(ocamlc_where)
 
 
 $(APP): $(OBJS)
 	$(eval ocamlc_where := $(shell ocamlc -where))
-	$(CC) -o $@ $^ -L$(ocamlc_where) -lm -ldl -lasmrun
+	$(CC) $(CFLAGS) -o $@ $^ -L$(ocamlc_where) -lm -ldl -lasmrun
 
 clean:
-	$(RM) $(APP) $(OBJS)
+	$(RM) $(APP) $(OBJS) *.cm*
