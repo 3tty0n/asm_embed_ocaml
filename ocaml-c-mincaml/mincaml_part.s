@@ -1,3 +1,4 @@
+# add caml_startup(argv) in the main function of stub.c
 .data
 .balign	8
 .text
