@@ -1,6 +1,6 @@
 CC := gcc
 CFLAGS :=
-OCAMLC := ocamlc
+OCAMLC := ocamlopt
 
 ifdef 32bit
 	CFLAGS += -m32
