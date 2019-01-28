@@ -15,13 +15,16 @@ int h(int *data) {
 }
 
 void call_caml_f(int arg) {
-  static value *closure_f = NULL;
+  static value * closure_f = NULL;
   if (closure_f == NULL) {
-    closure_f = caml_named_value("test function");
+    /* First time around, look up by name */
+    closure_f = caml_named_value("f");
   }
   caml_callback(*closure_f, Val_int(arg));
 }
 
-void run_caml_f(int arg, char** argv) {
-	call_caml_f(arg);
+int fib(int n) {
+  static value * fib_closure = NULL;
+  if (fib_closure == NULL) fib_closure = caml_named_value("fib");
+  return Int_val(callback(*fib_closure, Val_int(n)));
 }
