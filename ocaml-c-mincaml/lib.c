@@ -28,3 +28,15 @@ int fib(int n) {
   if (fib_closure == NULL) fib_closure = caml_named_value("fib");
   return Int_val(callback(*fib_closure, Val_int(n)));
 }
+
+int array_f(int n) {
+	return Val_int(n);
+}
+
+int average(int *data) {
+  static value * average_closure = NULL;
+  if (average_closure == NULL) {
+		average_closure = caml_named_value("average");
+	}
+  return Int_val(callback(*average_closure, alloc_array(array_f, data)));
+}

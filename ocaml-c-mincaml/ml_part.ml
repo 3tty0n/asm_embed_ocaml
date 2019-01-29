@@ -14,7 +14,13 @@ let rec fib n =
   if n < 2 then n
   else fib (n - 1) + fib (n - 2)
 
+let rec average arr =
+  let n = Array.length arr in
+  let sum = Array.fold_left (fun a x -> a + x) 0 arr in
+  sum / n
+
 let () =
   Callback.register "f" f;
   Callback.register "g" g;
   Callback.register "fib" fib;
+  Callback.register "average" average;
