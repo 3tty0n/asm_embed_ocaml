@@ -2,7 +2,7 @@ CC := gcc
 CFLAGS := -m32
 OCAMLC := ocamlopt
 
-CSRCS := lib.c
+CSRCS := c_part.c
 MLSRCS := ml_part.ml
 APP := mincaml_part
 OBJS := $(CSRCS:%.c=%.o) $(MLSRCS:%.ml=%.o) $(APP).o
