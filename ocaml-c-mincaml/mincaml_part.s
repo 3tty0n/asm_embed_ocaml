@@ -16,10 +16,13 @@ _min_caml_start: # for cygwin
 	movl	32(%esp),%ebp
 	movl	36(%esp),%eax
 	movl	%eax,min_caml_hp
-	movl	$10, %eax
-	pushl	%eax
-	call	_fib
-	popl	%ebp
+	movl	$40,%eax
+	call	min_caml_call_caml_fib
+	call	min_caml_print_int
+	call	min_caml_print_newline
+	movl	$20,%ebx
+	movl	$10,%eax
+	call	min_caml_call_caml_add
 	call	min_caml_print_int
 	call	min_caml_print_newline
 	popl	%ebp

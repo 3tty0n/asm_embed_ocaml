@@ -2,10 +2,12 @@ CC := gcc
 CFLAGS := -m32
 OCAMLC := ocamlopt
 
+APP := mincaml_part
+
 CSRCS := c_part.c
 MLSRCS := ml_part.ml
-APP := mincaml_part
-OBJS := $(CSRCS:%.c=%.o) $(MLSRCS:%.ml=%.o) $(APP).o
+ASMS := ml_part_interop.s
+OBJS := $(CSRCS:%.c=%.o) $(MLSRCS:%.ml=%.o) $(APP).o $(ASMS:%.s=%.o)
 
 OCAMLC_WHERE := $(shell ocamlc -where)
 MINCAML_WHERE := ~/src/github.com/esumii/min-caml
