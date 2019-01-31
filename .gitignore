@@ -1,4 +1,7 @@
 *.o
-*.s
 *.cm*
 *.opt
+
+.merlin
+
+_build/

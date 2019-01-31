@@ -1,0 +1,25 @@
+(alias
+ (name all)
+ (deps stub.exe))
+
+(executable
+ (name ml_part)
+ (modules ml_part)
+ (modes (native exe)
+        (native object)
+        (native shared_object)))
+
+(rule
+ (targets mincaml_part.mc.s)
+ (deps mincaml_part.mc.ml)
+ (action (run %{bin:min-caml} %{deps})))
+
+(rule
+ (targets stub.exe)
+ (deps ml_part.exe%{ext_obj} stub.c libmincaml.S ml_part_interop.s c_part.c mincaml_part.mc.s)
+ (action (run %{cc} -o %{targets} -I %{ocaml_where} -L %{ocaml_where} -I . %{deps}
+           %{ocaml-config:native_c_libraries})))
+
+(alias
+ (name runtest)
+ (action (run ./stub.exe)))

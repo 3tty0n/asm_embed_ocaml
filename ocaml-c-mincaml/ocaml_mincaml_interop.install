@@ -1,0 +1,4 @@
+lib: [
+  "_build/install/default/lib/ocaml_mincaml_interop/META" {"META"}
+  "_build/install/default/lib/ocaml_mincaml_interop/opam" {"opam"}
+]

@@ -12,7 +12,7 @@ let g x y =
 
 let rec fib n = if n < 2 then n else fib (n - 1) + fib (n - 2)
 
-let rec add x y = x + y
+let add x y = x + y
 
 let sum arr = Array.fold_left (fun a x -> a + x) 0 arr
 
