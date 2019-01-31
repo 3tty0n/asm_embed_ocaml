@@ -24,27 +24,27 @@ void call_caml_f(int arg) {
 }
 
 int call_caml_fib(int n) {
-	static value * fib_closure = NULL;
-	if (fib_closure == NULL) fib_closure = caml_named_value("fib");
-	return Int_val(callback(*fib_closure, Val_int(n)));
+  static value * fib_closure = NULL;
+  if (fib_closure == NULL) fib_closure = caml_named_value("fib");
+  return Int_val(callback(*fib_closure, Val_int(n)));
 }
 
 int call_caml_add(int x, int y) {
-	static value * add_clsr = NULL;
-	if (add_clsr == NULL) {
-		add_clsr = caml_named_value("add");
-	}
-	return Int_val(callback2(*add_clsr, Val_int(x), Val_int(y)));
+  static value * add_clsr = NULL;
+  if (add_clsr == NULL) {
+    add_clsr = caml_named_value("add");
+  }
+  return Int_val(callback2(*add_clsr, Val_int(x), Val_int(y)));
 }
 
 int init_f(int n) {
-	return Val_int(n);
+  return Val_int(n);
 }
 
 int call_caml_average(int *data) {
-	static value * average_closure = NULL;
-	if (average_closure == NULL) {
-		average_closure = caml_named_value("average");
-	}
-	return Int_val(callback(*average_closure, caml_alloc_array(init_f, data)));
+  static value * average_closure = NULL;
+  if (average_closure == NULL) {
+    average_closure = caml_named_value("average");
+  }
+  return Int_val(callback(*average_closure, caml_alloc_array(init_f, data)));
 }
