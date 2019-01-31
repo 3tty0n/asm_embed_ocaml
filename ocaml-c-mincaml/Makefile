@@ -2,7 +2,7 @@ CC := gcc
 CFLAGS := -m32
 OCAMLC := ocamlopt
 
-APP := mincaml_part
+APP := mincaml_part.mc
 
 CSRCS := c_part.c
 MLSRCS := ml_part.ml
@@ -13,7 +13,7 @@ OCAMLC_WHERE := $(shell ocamlc -where)
 MINCAML_WHERE := ~/src/github.com/esumii/min-caml
 MINCAML_STUBS := $(MINCAML_WHERE)/libmincaml.S $(MINCAML_WHERE)/stub.c
 
-.SUFFIXES: .ml .o .c
+.SUFFIXES: .mc.ml .ml .o .c
 
 %.o: %.s
 	$(CC) $(CFLAGS) -c -I"$(OCAMLC_WHERE)" -o $@ $<
@@ -21,11 +21,13 @@ MINCAML_STUBS := $(MINCAML_WHERE)/libmincaml.S $(MINCAML_WHERE)/stub.c
 %.o: %.ml
 	$(OCAMLC) -output-obj -o $@ unix.cmxa $<
 
+%.s: %.mc.ml
+	min-caml $(basename $<)
+
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -I$(OCAMLC_WHERE) -o $@
 
-
-$(APP): $(APP).o $(OBJS)
+$(APP): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ -I$(OCAMLC_WHERE) -L$(OCAMLC_WHERE) $(MINCAML_STUBS) -lunix -lasmrun -lcurses $^
 
 clean:
