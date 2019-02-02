@@ -12,7 +12,7 @@ let g x y =
 
 let rec fib n = if n < 2 then n else fib (n - 1) + fib (n - 2)
 
-let add x y = x + y
+let add x y z w = x + y + z + w
 
 let sum arr = Array.fold_left (fun a x -> a + x) 0 arr
 
@@ -24,4 +24,4 @@ let () =
   Callback.register "fib" fib ;
   Callback.register "average" average ;
   Callback.register "add" add ;
-  Callback.register "sum" sum
+  Callback.register "sum" sum ;
