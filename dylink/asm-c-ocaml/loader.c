@@ -4,18 +4,18 @@
 
 typedef int (*dylink_fun)(int);
 
-CAMLprim value call_caml_dlopen(value filename) {
+CAMLprim value call_caml_dlopen(value filename, value funcname) {
   dylink_fun sym = NULL;
   void *handle = NULL;
 
-  handle = dlopen("./libshared.dylib", RTLD_LAZY);
+  handle = dlopen(String_val(filename), RTLD_LAZY);
 
   if (handle == NULL) {
     fprintf(stderr, "error: dlopen\n");
     return -1;
   }
 
-  sym = (dylink_fun)dlsym(handle, "fact");
+  sym = (dylink_fun)dlsym(handle, String_val(funcname));
 
   if (sym == NULL) {
     fprintf(stderr, "error: dlsym\n");
