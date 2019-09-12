@@ -1,2 +1,3 @@
 #!/bin/sh
-ocamlopt -o main.opt main.ml loader.c
+gcc -m32 -fPIC -shared -ldl add.s -o libadd.so
+ocamlopt -o main.opt main.ml loader.o
