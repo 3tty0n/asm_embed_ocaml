@@ -31,7 +31,7 @@ CAMLprim value call_dlfun_arg2(value filename, value funcname, value arg1, value
   sym = (fun_arg2)dlsym(handle, String_val(funcname));
   if (sym == NULL) {fprintf(stderr, "error: dlsym\n"); return -1;}
 
-  printf("%d\n", sym(Int_val(arg1), Int_val(arg2)));
+  sym(Int_val(arg1), Int_val(arg2));
 
   return Val_unit;
 }
