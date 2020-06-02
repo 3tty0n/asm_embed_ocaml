@@ -39,5 +39,14 @@ let rec interp stack sp code pc =
 
 let stack = Array.make 50 (-1) in
 let code = [|5; 1; 5; 2; 1; 9|] in
-let res = interp stack 0 code 0 in
-print_int res
+(* let res = interp stack 0 code 0 in print_int res *)
+let rec loop i =
+  if i = 0 then ()
+  else
+    let _ = interp stack 0 code 0 in
+    loop (i-1)
+in
+let s = get_current_micros () in
+let _ = loop 100 in
+let e = get_current_micros () in
+print_int (e - s)
