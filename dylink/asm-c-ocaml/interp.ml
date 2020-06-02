@@ -1,12 +1,7 @@
-let rec jit_merge_point _ _ _ = () ;;
-
-let rec jit_guard _ =
-  let arr = Array.make 4 (-1) in
-  arr
-;;
+let rec jit_merge_point _ _ _ _ = () ;;
 
 let rec interp stack sp code pc =
-  jit_merge_point pc stack sp;
+  jit_merge_point stack sp code pc;
   let opcode = code.(pc) in
   if opcode = 1 then            (* ADD *)
     let v1 = stack.(sp - 1) in

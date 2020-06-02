@@ -130,7 +130,7 @@ create_array_exit:
 	movl	%ebp, %esp
 	popl	%ebp
 	ret
-create_array_cont:
+create_array_cont:n
 	decl	%ecx
 	movl	%ebx, (%eax,%ecx,4)
 	jmp	create_array_loop
@@ -257,5 +257,17 @@ min_caml_fnegd:
 	.long	0
 	.long	0
 .globl min_caml_hp
-min_caml_hp:	
+min_caml_hp:
 	.long	0x0
+.globl min_caml_jit_merge_point
+min_caml_jit_merge_point:
+	pushl	%ebp
+	movl	%esp, %ebp
+	pushl	%edx
+	pushl	%ecx
+	pushl	%ebx
+	pushl	%eax
+	call	call_caml_jit_merge_point
+	movl	%ebp, %esp
+	popl	%ebp
+	ret
