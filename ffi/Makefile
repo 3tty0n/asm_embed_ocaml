@@ -24,7 +24,7 @@ OBJS := $(CSRCS:%.c=%.o) $(MLSRCS:%.ml=%.o)
 
 $(APP): $(OBJS)
 	$(eval ocamlc_where := $(shell ocamlc -where))
-	$(CC) $(CFLAGS) -o $@ $^ -L$(ocamlc_where) -lm -ldl -lasmrun
+	$(CC) $(CFLAGS) -o $@ $^ -L$(ocamlc_where) -lm -ldl
 
 clean:
 	$(RM) $(APP) $(OBJS) *.cm*
