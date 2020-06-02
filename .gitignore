@@ -1,6 +1,7 @@
 *.o
 *.cm*
 *.opt
+*.a
 
 .merlin
 
