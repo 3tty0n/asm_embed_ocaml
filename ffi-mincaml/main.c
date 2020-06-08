@@ -5,13 +5,6 @@
 #include <caml/callback.h>
 
 extern void min_caml_start(char *, char *);
-extern unsigned long get_current_micros(void) asm ("min_caml_get_current_micros");
-
-unsigned long get_current_micros() {
-  struct timeval current_time;
-  gettimeofday(&current_time, NULL);
-  return current_time.tv_sec * (int)1e6 + current_time.tv_usec;
-}
 
 /* "stderr" is a macro and cannot be referred to in libmincaml.S, so
    this "min_caml_stderr" is used (in place of "__iob+32") for better
