@@ -3,22 +3,24 @@ CFLAGS := -m32
 OCAMLOPT := ocamlopt
 MINCAML := min-caml
 
-prog: interp.s main.o libmincaml.o modwrap.o modcaml.o
+APP := prog
+
+$(APP): interp.s main.o lib.o libmincaml.o modwrap.o modcaml.o
 	$(CC) $(CFLAGS) -I`ocamlc -where` $^ -o $@ -L`ocamlc -where` -lm -ldl -lasmrun
 
 clean:
-	$(RM) *.opt *.o
+	$(RM) *.opt *.o $(APP)
 
-libmincaml.o: libmincaml.S
+%.o: %.S
 	$(CC) $(CFLAGS) -lm -c $<
 
-interp.s: interp.ml
+%.s: %.ml
 	$(MINCAML) $<
 
-modwrap.o: modwrap.c
+%.o: %.c
 	$(OCAMLOPT) -c -o $@
 
-modcaml.o: mod.ml
+%caml.o: %.ml
 	$(OCAMLOPT) -output-obj -o $@ $<
 
 %.o: %.c
