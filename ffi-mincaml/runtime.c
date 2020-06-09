@@ -52,7 +52,13 @@ void add_pc(int new_pc) {
 void count_up(int pc) {
   struct prof_tbl *p;
   HASH_FIND_INT(prof_tbl, &pc, p);
-  p->count = p->count += 1;
+  if (p == NULL) {
+    p = (struct prof_tbl *)malloc(sizeof *p);
+    p->pc = pc;
+    p->count = 1;
+  } else {
+    p->count = p->count += 1;
+  }
   HASH_ADD_INT(prof_tbl, pc, p);
   return;
 }
