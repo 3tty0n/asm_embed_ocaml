@@ -9,7 +9,7 @@ $(APP): interp.s main.o lib.o libmincaml.o modwrap.o modcaml.o
 	$(CC) $(CFLAGS) -I`ocamlc -where` $^ -o $@ -L`ocamlc -where` -lm -ldl -lasmrun
 
 clean:
-	$(RM) *.opt *.o $(APP)
+	$(RM) *.opt *.o *.cm* $(APP)
 
 %.o: %.S
 	$(CC) $(CFLAGS) -lm -c $<
