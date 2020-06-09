@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <dlfcn.h>
 #include <unistd.h>
 #include <sys/time.h>
 
@@ -16,7 +17,12 @@
 enum jit_type {TJ, MJ};
 
 int counter = 0;
-
+n
+/**
+ * Generate the name of a trace
+ * - tracing JIT: tracetj0, tracetj1, ...
+ * - method JIT: tracemj0, tracemj1, ...
+ */
 char *gen_trace_name(enum jit_type typ) {
   char *str;
   if (typ == TJ) {
@@ -68,4 +74,27 @@ bool over_thold(int pc) {
   HASH_FIND_INT(prof_tbl, &pc, p);
   if (p == NULL) return false;
   return p->count > THOLD;
+}
+
+typedef int (*fun_arg2)(int, int);
+
+int call_dlfun_arg1(char *filename, char *funcname, int arg1, int arg2) {
+  fun_arg2 sym = NULL;
+  void *handle = NULL;
+  int res;
+
+  handle = dlopen(filename, RTLD_LAZY);
+  if (handle == NULL) {
+    fprintf(stderr, "error: dlopen:\n");
+    exit(-1);
+  }
+
+  sym = (fun_arg2)dlsym(handle, funcname);
+  if (sym == NULL) {
+    fprintf(stderr, "error: dlsym:\n");
+    exit(-1);
+  }
+
+  res = sym(arg1, arg2);
+  return res;
 }
