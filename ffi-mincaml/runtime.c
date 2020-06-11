@@ -98,6 +98,8 @@ struct so_tbl {
 
 struct so_tbl *so_tbl = NULL;
 
+fun_arg2 register_function = NULL;
+
 bool called = false;
 
 int call_dlfun_arg2(char *filename, char *funcname, int arg1, int arg2) {
@@ -106,13 +108,13 @@ int call_dlfun_arg2(char *filename, char *funcname, int arg1, int arg2) {
   int res;
 
   if (called) {
-    asm( "pushl $1\n\t"
-		 "pushl $2\n\t"
-		 "call %%eax\n\t"
-		 : "=r"(res) 			/* output */
-		 : "r"(funcname)		/* input */
-		 : "%eax"				/* clobbered register */
-		 );
+	if (register_function == NULL) {
+	  fprintf(stderr, "register_function is null");
+	  exit(-1);
+	} else {
+	  res = register_function(arg1, arg2);
+	  return res;
+	}
   } else {
 	handle = dlopen(filename, RTLD_LAZY);
 	if (handle == NULL) {
@@ -127,6 +129,7 @@ int call_dlfun_arg2(char *filename, char *funcname, int arg1, int arg2) {
 	  fprintf(stderr, "error: dlsym %s\n", funcname);
 	  exit(-1);
 	}
+	register_function = sym;
 
 	res = sym(arg1, arg2);
 

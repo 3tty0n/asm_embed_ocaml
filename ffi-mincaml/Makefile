@@ -14,7 +14,7 @@ clean:
 	$(RM) *.opt *.o *.cm* libadd.so $(APP)
 
 libadd.so: add.o
-	$(CC) -m32 -fPIC -shared -o $@ $<
+	$(CC) -m32 -fPIC -shared -Wl,--export-dynamic -o $@ $<
 
 add.o: add.s
 	$(CC) $(CFLAGS) -fPIC -c -o $@ $<
