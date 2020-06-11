@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <caml/mlvalues.h>
-#include <caml/callback.h>
 
 extern void min_caml_start(char *, char *);
 

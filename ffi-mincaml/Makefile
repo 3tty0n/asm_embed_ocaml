@@ -1,24 +1,29 @@
 CC := gcc
-CFLAGS := -m32
+CFLAGS := -m32 -O2 -g
 OCAMLOPT := ocamlopt
 MINCAML := min-caml
 
 APP := prog
+DEPS := lib.h
+OBJ := interp.s main.o lib.o libmincaml.o modwrap.o modcaml.o runtime.o
 
-$(APP): interp.s main.o lib.o libmincaml.o modwrap.o modcaml.o
-	$(CC) $(CFLAGS) -I`ocamlc -where` $^ -o $@ -L`ocamlc -where` -lm -ldl -lasmrun
+$(APP): $(OBJ)
+	$(CC) $(CFLAGS) -rdynamic -I`ocamlc -where` -I. -L`ocamlc -where` -L/usr/lib32 $^ -o $@ -lm -ldl -lasmrun
 
 clean:
-	$(RM) *.opt *.o *.cm* $(APP)
+	$(RM) *.opt *.o *.cm* libadd.so $(APP)
+
+libadd.so: add.o
+	$(CC) -m32 -fPIC -shared -o $@ $<
+
+add.o: add.s
+	$(CC) $(CFLAGS) -fPIC -c -o $@ $<
 
 %.o: %.S
 	$(CC) $(CFLAGS) -lm -c $<
 
 %.s: %.ml
 	$(MINCAML) $<
-
-%.o: %.c
-	$(OCAMLOPT) -c -o $@
 
 %caml.o: %.ml
 	$(OCAMLOPT) -output-obj -o $@ $<

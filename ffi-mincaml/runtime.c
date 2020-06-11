@@ -14,10 +14,15 @@
 
 #define THOLD 100
 
+extern void call_test_add(int, int) asm("call_test_add");
+
 enum jit_type {TJ, MJ};
 
+/**
+ * For gen_trace_name
+ */
 int counter = 0;
-n
+
 /**
  * Generate the name of a trace
  * - tracing JIT: tracetj0, tracetj1, ...
@@ -44,7 +49,14 @@ struct prof_tbl {
   UT_hash_handle hh; // make it hashable
 };
 
+struct name_tbl {
+  int pc; // key
+  char* name; // value
+  UT_hash_handle hh; // make it hashable
+};
+
 struct prof_tbl *prof_tbl = NULL;
+struct name_tbl *name_tbl = NULL;
 
 void add_pc(int new_pc) {
   struct prof_tbl *p;
@@ -78,23 +90,34 @@ bool over_thold(int pc) {
 
 typedef int (*fun_arg2)(int, int);
 
-int call_dlfun_arg1(char *filename, char *funcname, int arg1, int arg2) {
+int call_dlfun_arg2(char *filename, char *funcname, int arg1, int arg2) {
   fun_arg2 sym = NULL;
   void *handle = NULL;
   int res;
 
   handle = dlopen(filename, RTLD_LAZY);
   if (handle == NULL) {
-    fprintf(stderr, "error: dlopen:\n");
+    fprintf(stderr, "error: dlopen %s\n", filename);
     exit(-1);
   }
 
+  dlerror();
+
   sym = (fun_arg2)dlsym(handle, funcname);
   if (sym == NULL) {
-    fprintf(stderr, "error: dlsym:\n");
+    fprintf(stderr, "error: dlsym %s\n", funcname);
     exit(-1);
   }
 
   res = sym(arg1, arg2);
   return res;
+}
+
+/**
+ * for test
+ */
+void call_test_add(int a, int b) {
+  int x = call_dlfun_arg2("./libadd.so", "add", a, b);
+  printf("call_test_add is called: %d + %d = %d\n", a, b, x);
+  return;
 }
