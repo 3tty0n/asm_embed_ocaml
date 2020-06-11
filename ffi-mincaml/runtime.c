@@ -31,12 +31,12 @@ int counter = 0;
 char *gen_trace_name(enum jit_type typ) {
   char *str;
   if (typ == TJ) {
-	sprintf(str, "tracetj%d", counter);
+    sprintf(str, "tracetj%d", counter);
   } else if (typ == MJ) {
-	sprintf(str, "tracemj%d", counter);
+    sprintf(str, "tracemj%d", counter);
   } else {
-	printf(stderr, "invalid jit_type");
-	exit(EXIT_FAILURE);
+    fprintf(stderr, "invalid jit_type");
+    exit(EXIT_FAILURE);
   }
   counter += 1;
   assert(str[41] == '\0');
@@ -100,41 +100,40 @@ struct so_tbl *so_tbl = NULL;
 
 fun_arg2 register_function = NULL;
 
-bool called = false;
+bool called_flg = false;
 
 int call_dlfun_arg2(char *filename, char *funcname, int arg1, int arg2) {
   fun_arg2 sym = NULL;
   void *handle = NULL;
   int res;
 
-  if (called) {
-	if (register_function == NULL) {
-	  fprintf(stderr, "register_function is null");
-	  exit(-1);
-	} else {
-	  res = register_function(arg1, arg2);
-	  return res;
-	}
+  if (called_flg) {
+    if (register_function == NULL) {
+      fprintf(stderr, "register_function is null");
+      exit(-1);
+    } else {
+      res = register_function(arg1, arg2);
+      return res;
+    }
   } else {
-	handle = dlopen(filename, RTLD_LAZY);
-	if (handle == NULL) {
-	  fprintf(stderr, "error: dlopen %s\n", filename);
-	  exit(-1);
-	}
+    handle = dlopen(filename, RTLD_LAZY);
+    if (handle == NULL) {
+      fprintf(stderr, "error: dlopen %s\n", filename);
+      exit(-1);
+    }
 
-	dlerror();
+    dlerror();
 
-	sym = (fun_arg2)dlsym(handle, funcname);
-	if (sym == NULL) {
-	  fprintf(stderr, "error: dlsym %s\n", funcname);
-	  exit(-1);
-	}
-	register_function = sym;
+    sym = (fun_arg2)dlsym(handle, funcname);
+    if (sym == NULL) {
+      fprintf(stderr, "error: dlsym %s\n", funcname);
+      exit(-1);
+    }
+    register_function = sym;
+    res = sym(arg1, arg2);
+    called_flg = true;
 
-	res = sym(arg1, arg2);
-
-	called = true;
-	return res;
+    return res;
   }
 
 }
