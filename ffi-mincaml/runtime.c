@@ -90,27 +90,50 @@ bool over_thold(int pc) {
 
 typedef int (*fun_arg2)(int, int);
 
+struct so_tbl {
+  char* name; // key
+  bool loaded; //value
+  UT_hash_handle hh; // make it hashable
+};
+
+struct so_tbl *so_tbl = NULL;
+
+bool called = false;
+
 int call_dlfun_arg2(char *filename, char *funcname, int arg1, int arg2) {
   fun_arg2 sym = NULL;
   void *handle = NULL;
   int res;
 
-  handle = dlopen(filename, RTLD_LAZY);
-  if (handle == NULL) {
-    fprintf(stderr, "error: dlopen %s\n", filename);
-    exit(-1);
+  if (called) {
+    asm( "pushl $1\n\t"
+		 "pushl $2\n\t"
+		 "call %%eax\n\t"
+		 : "=r"(res) 			/* output */
+		 : "r"(funcname)		/* input */
+		 : "%eax"				/* clobbered register */
+		 );
+  } else {
+	handle = dlopen(filename, RTLD_LAZY);
+	if (handle == NULL) {
+	  fprintf(stderr, "error: dlopen %s\n", filename);
+	  exit(-1);
+	}
+
+	dlerror();
+
+	sym = (fun_arg2)dlsym(handle, funcname);
+	if (sym == NULL) {
+	  fprintf(stderr, "error: dlsym %s\n", funcname);
+	  exit(-1);
+	}
+
+	res = sym(arg1, arg2);
+
+	called = true;
+	return res;
   }
 
-  dlerror();
-
-  sym = (fun_arg2)dlsym(handle, funcname);
-  if (sym == NULL) {
-    fprintf(stderr, "error: dlsym %s\n", funcname);
-    exit(-1);
-  }
-
-  res = sym(arg1, arg2);
-  return res;
 }
 
 /**
