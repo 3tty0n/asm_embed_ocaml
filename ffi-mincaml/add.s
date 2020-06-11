@@ -14,7 +14,7 @@ add:
 	movl	32(%esp), %eax
 	movl	36(%esp), %ebx
 	call	add.4
-	call	min_caml_print_int
+	movl	%eax, 32(%esp)
 	popl	%ebp
 	popl	%edi
 	popl	%esi
@@ -22,6 +22,7 @@ add:
 	popl	%ecx
 	popl	%ebx
 	popl	%eax
+	movl	4(%esp), %eax
 	ret
 	.globl add.4
 add.4:
