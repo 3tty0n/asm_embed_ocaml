@@ -130,7 +130,7 @@ create_array_exit:
 	movl	%ebp, %esp
 	popl	%ebp
 	ret
-create_array_cont:n
+create_array_cont:
 	decl	%ecx
 	movl	%ebx, (%eax,%ecx,4)
 	jmp	create_array_loop
