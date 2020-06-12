@@ -92,11 +92,28 @@ typedef int (*fun_arg2)(int, int);
 
 struct so_tbl {
   char* name; // key
-  bool loaded; //value
+  fun_arg2 sym; //value
   UT_hash_handle hh; // make it hashable
 };
 
 struct so_tbl *so_tbl = NULL;
+
+void add_sym(char* name, fun_arg2 sym) {
+  struct so_tbl *s;
+  HASH_FIND_STR(so_tbl, name, s);
+  if (s == NULL) {
+    s = (struct so_tbl *)malloc(sizeof *s);
+    s->name = name;
+    s->sym = sym;
+  }
+  return;
+}
+
+fun_arg2 find_sym(char *name) {
+  struct so_tbl *s;
+  HASH_FIND_STR(so_tbl, name, s);
+  return s->sym;
+}
 
 fun_arg2 register_function = NULL;
 
@@ -106,15 +123,13 @@ int call_dlfun_arg2(char *filename, char *funcname, int arg1, int arg2) {
   fun_arg2 sym = NULL;
   void *handle = NULL;
   int res;
+  struct so_tbl *s;
 
-  if (called_flg) {
-    if (register_function == NULL) {
-      fprintf(stderr, "register_function is null");
-      exit(-1);
-    } else {
-      res = register_function(arg1, arg2);
-      return res;
-    }
+  HASH_FIND_STR(so_tbl, filename, s);
+  if (s != NULL) {
+    sym = s->sym;
+    res = sym(arg1, arg2);
+    return res;
   } else {
     handle = dlopen(filename, RTLD_LAZY);
     if (handle == NULL) {
@@ -129,9 +144,8 @@ int call_dlfun_arg2(char *filename, char *funcname, int arg1, int arg2) {
       fprintf(stderr, "error: dlsym %s\n", funcname);
       exit(-1);
     }
-    register_function = sym;
+    add_sym(filename, sym);
     res = sym(arg1, arg2);
-    called_flg = true;
 
     return res;
   }
@@ -143,6 +157,6 @@ int call_dlfun_arg2(char *filename, char *funcname, int arg1, int arg2) {
  */
 void call_test_add(int a, int b) {
   int x = call_dlfun_arg2("./libadd.so", "add", a, b);
-  printf("call_test_add is called: %d + %d = %d\n", a, b, x);
+  //printf("call_test_add is called: %d + %d = %d\n", a, b, x);
   return;
 }
