@@ -44,10 +44,11 @@ let code = [|5; 1; 5; 2; 1; 9|] in
 let rec loop i =
   if i = 0 then ()
   else
+    let s = get_current_micros () in
     let _ = interp stack 0 code 0 in
+    let e = get_current_micros () in
+    print_int (e - s); print_newline ();
     loop (i-1)
 in
-let s = get_current_micros () in
 let _ = loop 10 in
-let e = get_current_micros () in
-print_int (e - s)
+()
