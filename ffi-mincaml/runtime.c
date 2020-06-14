@@ -20,6 +20,8 @@
 
 extern void call_test_add(int, int, int) asm("call_test_add");
 
+typedef int (*fun_arg2)(int, int);
+
 enum jit_type {TJ, MJ};
 
 /**
@@ -47,52 +49,36 @@ char *gen_trace_name(enum jit_type typ) {
   return str;
 }
 
-struct prof_tbl {
-  int pc; // key
-  int count; // value
-  UT_hash_handle hh; // make it hashable
-};
+int counter_so_name = 0;
 
-struct name_tbl {
-  int pc; // key
-  char* name; // value
-  UT_hash_handle hh; // make it hashable
-};
-
-struct prof_tbl *prof_tbl = NULL;
-struct name_tbl *name_tbl = NULL;
-
-void add_pc(int new_pc) {
-  struct prof_tbl *p;
-  p = malloc(sizeof(struct prof_tbl));
-  p->pc = new_pc;
-  p->count = 1;
-  HASH_ADD_INT(prof_tbl, pc, p);
-  return;
-}
-
-void count_up(int pc) {
-  struct prof_tbl *p;
-  HASH_FIND_INT(prof_tbl, &pc, p);
-  if (p == NULL) {
-    p = (struct prof_tbl *)malloc(sizeof *p);
-    p->pc = pc;
-    p->count = 1;
+char *gen_so_name(enum jit_type typ) {
+  char *str;
+  if (typ == TJ) {
+    sprintf(str, "libtracetj%d.so", counter_so_name);
+  } else if (typ == MJ) {
+    sprintf(str, "libtracemj%d.so", counter_so_name);
   } else {
-    p->count = p->count += 1;
+    fprintf(stderr, "invalid jit_type");
+    exit(EXIT_FAILURE);
   }
-  HASH_ADD_INT(prof_tbl, pc, p);
-  return;
+  counter_so_name += 1;
+  assert(str[41] == '\0');
+  return str;
 }
 
-bool over_thold(int pc) {
-  struct prof_tbl *p;
-  HASH_FIND_INT(prof_tbl, &pc, p);
-  if (p == NULL) return false;
-  return p->count > THOLD;
-}
 
-typedef int (*fun_arg2)(int, int);
+int pc_count_arr[300] = {0};
+char* pc_name_arr[300] = {NULL};
+
+void count_up(int pc) { pc_count_arr[pc] += 1; }
+
+bool over_thold(int pc) { return pc_count_arr[pc] > 100; }
+
+void register_pc(int pc, enum jit_type typ) {
+  char* name;
+  name = gen_trace_name(typ);
+  pc_name_arr[pc] = name;
+}
 
 fun_arg2 sym_arr[100] = {NULL};
 
@@ -132,7 +118,13 @@ int call_dlfun_arg2(char *filename, char *funcname, int pc, int arg1, int arg2) 
  * for test
  */
 void call_test_add(int pc, int a, int b) {
-  int x = call_dlfun_arg2("./libadd.so", "add", pc, a, b);
+  char* name;
+  name = pc_name_arr[pc];
+  if (name == NULL) {
+    name = "./libadd.so"; // gen name
+    pc_name_arr[pc] = "./libadd.so";
+  }
+  int x = call_dlfun_arg2(name, "add", pc, a, b);
   //  printf("call_test_add is called: %d + %d = %d\n", a, b, x);
   return;
 }
