@@ -287,6 +287,7 @@ min_caml_test_dummy:
 min_caml_test_add:
 	pushl	%ebp
 	movl	%esp, %ebp
+	pushl	%ecx
 	pushl	%ebx
 	pushl	%eax
 	call	call_test_add

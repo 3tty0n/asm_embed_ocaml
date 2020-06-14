@@ -2,7 +2,7 @@
 
 let rec interp stack sp code pc =
   jit_merge_point stack sp code pc;
-  test_add 1 2;
+  test_add pc 1 2;
   let opcode = code.(pc) in
   if opcode = 1 then            (* ADD *)
     let v1 = stack.(sp - 1) in

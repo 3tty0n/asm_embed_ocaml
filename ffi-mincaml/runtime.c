@@ -2,19 +2,23 @@
 #include <caml/alloc.h>
 #include <caml/callback.h>
 #include <caml/mlvalues.h>
-#include <uthash.h>
+#include <caml/hash.h>
 #include <assert.h>
 #include <signal.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <dlfcn.h>
 #include <unistd.h>
 #include <sys/time.h>
 
+#include <uthash.h>
+#include "hash_table.h"
+
 #define THOLD 100
 
-extern void call_test_add(int, int) asm("call_test_add");
+extern void call_test_add(int, int, int) asm("call_test_add");
 
 enum jit_type {TJ, MJ};
 
@@ -90,31 +94,18 @@ bool over_thold(int pc) {
 
 typedef int (*fun_arg2)(int, int);
 
-struct so_tbl {
-  char* name; // key
-  bool loaded; //value
-  UT_hash_handle hh; // make it hashable
-};
+fun_arg2 sym_arr[100] = {NULL};
 
-struct so_tbl *so_tbl = NULL;
-
-fun_arg2 register_function = NULL;
-
-bool called_flg = false;
-
-int call_dlfun_arg2(char *filename, char *funcname, int arg1, int arg2) {
+int call_dlfun_arg2(char *filename, char *funcname, int pc, int arg1, int arg2) {
   fun_arg2 sym = NULL;
   void *handle = NULL;
+  fun_arg2 registered_sym = NULL;
   int res;
 
-  if (called_flg) {
-    if (register_function == NULL) {
-      fprintf(stderr, "register_function is null");
-      exit(-1);
-    } else {
-      res = register_function(arg1, arg2);
-      return res;
-    }
+  registered_sym = sym_arr[pc];
+  if (registered_sym != NULL) {
+    res = registered_sym(arg1, arg2);
+    return res;
   } else {
     handle = dlopen(filename, RTLD_LAZY);
     if (handle == NULL) {
@@ -129,20 +120,19 @@ int call_dlfun_arg2(char *filename, char *funcname, int arg1, int arg2) {
       fprintf(stderr, "error: dlsym %s\n", funcname);
       exit(-1);
     }
-    register_function = sym;
+    sym_arr[pc] = sym;
     res = sym(arg1, arg2);
-    called_flg = true;
 
     return res;
   }
-
 }
+
 
 /**
  * for test
  */
-void call_test_add(int a, int b) {
-  int x = call_dlfun_arg2("./libadd.so", "add", a, b);
-  printf("call_test_add is called: %d + %d = %d\n", a, b, x);
+void call_test_add(int pc, int a, int b) {
+  int x = call_dlfun_arg2("./libadd.so", "add", pc, a, b);
+  //  printf("call_test_add is called: %d + %d = %d\n", a, b, x);
   return;
 }
