@@ -86,13 +86,22 @@ struct prof *find_prof(int pc) {
 
 
 struct sym {
-  char funcname[128];
-  void *handle; // value 1
-  fun_arg2 sym; // value 2
+  char funcname[128];  // key
+  void *handle; // value 2
+  fun_arg2 sym; // value 3
+  UT_hash_handle hh;
+};
+
+struct sym_pc {
+  int pc;
+  void *handle;
+  fun_arg2 sym;
   UT_hash_handle hh;
 };
 
 struct sym *syms = NULL;
+
+struct sym_pc *sym_pcs = NULL;
 
 void add_sym(char* funcname, void* handle, fun_arg2 sym) {
   struct sym *s;
@@ -103,10 +112,29 @@ void add_sym(char* funcname, void* handle, fun_arg2 sym) {
   HASH_ADD_STR(syms, funcname, s);
 }
 
+void add_sym_pc(int pc, void *handle, fun_arg2 sym) {
+  struct sym_pc *s;
+  HASH_FIND_INT(sym_pcs, &pc, s);
+  if (s == NULL) {
+    s = malloc(sizeof(struct sym_pc));
+    HASH_ADD_INT(sym_pcs, pc, s);
+  }
+  s->pc = pc;
+  s->handle = handle;
+  s->sym = sym;
+}
+
 struct sym *find_sym(char *funcname) {
   struct sym *s;
 
   HASH_FIND_STR(syms, funcname, s);
+  return s;
+}
+
+struct sym_pc *find_sym_pc(int pc) {
+  struct sym_pc *s;
+  HASH_FIND_INT(sym_pcs, &pc, s);
+
   return s;
 }
 
@@ -116,11 +144,12 @@ int call_dlfun_arg2(char *filename, char *funcname, int pc, int arg1,
   void *handle = NULL;
   int res;
 
-  struct sym *s = find_sym(funcname);
+  struct sym_pc *s = find_sym_pc(pc);
   if (s) {
-    printf("trace found:\t%s\t%s\n", filename, s->funcname);
+    printf("trace found at pc %d\n", pc);
     sym = s->sym;
     res = sym(arg1, arg2);
+    printf("res: %d\n", res);
     return res;
   } else {
     handle = dlopen(filename, RTLD_LAZY);
@@ -136,37 +165,64 @@ int call_dlfun_arg2(char *filename, char *funcname, int pc, int arg1,
       fprintf(stderr, "error: dlsym %s\n", funcname);
       return -1;
     }
-    add_sym(funcname, handle, sym);
+    printf("added sym:\t%s\t%d\n", filename, pc);
+    add_sym_pc(pc, handle, sym);
     res = sym(arg1, arg2);
 
     return res;
   }
 }
 
+char* jit_compile(char* func, int pc) {
+  char tname[128];
+  char so[128];
+  char buffer[1024];
+
+  gen_trace_name(tname, TJ);
+  gen_so_name(so, tname);
+
+  printf("compiling shared object: %s\n", so);
+  sprintf(buffer, "gcc -m32 -fPIC -c %s.s", func);
+  system(buffer);
+  sprintf(buffer, "gcc -m32 -fPIC -shared -Wl,--export-dynamic -o %s %s.o",
+          so, func);
+  system(buffer);
+
+  insert_prof(pc, 0, so);
+  return strdup(so);
+}
+
 /**
  * for test
  */
 void call_test_add(int pc, int a, int b) {
-  char tname[1024];
-  char so[1024];
+  char so[128];
   struct prof *p;
+
   p = find_prof(pc);
   if (p == NULL) {
-    char buffer[1024];
-    gen_trace_name(tname, TJ);
-    gen_so_name(so, tname);
-    printf("so name: %s\n", so);
-    sprintf(buffer, "gcc -m32 -fPIC -c %s", "add.s");
-    system(buffer);
-    sprintf(buffer, "gcc -m32 -fPIC -shared -Wl,--export-dynamic -o %s add.o",
-            so);
-    system(buffer);
-    insert_prof(pc, 0, so);
+    strcpy(so, jit_compile("add", pc));
     int x = call_dlfun_arg2(so, "add", pc, a, b);
     return;
   } else {
     strcpy(so, p->so_name);
     int x = call_dlfun_arg2(so, "add", pc, a, b);
+    return;
+  }
+}
+
+void call_test_sub(int pc, int a, int b) {
+  char so[128];
+  struct prof *p;
+
+  p = find_prof(pc);
+  if (p == NULL) {
+    strcpy(so, jit_compile("sub", pc));
+    int x = call_dlfun_arg2(so, "sub", pc, a, b);
+    return;
+  } else {
+    strcpy(so, p->so_name);
+    int x = call_dlfun_arg2(so, "sub", pc, a, b);
     return;
   }
 }
