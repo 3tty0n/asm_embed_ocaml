@@ -294,3 +294,14 @@ min_caml_test_add:
 	movl	%ebp, %esp
 	popl	%ebp
 	ret
+.globl min_caml_test_sub
+min_caml_test_sub:
+	pushl	%ebp
+	movl	%esp, %ebp
+	pushl	%ecx
+	pushl	%ebx
+	pushl	%eax
+	call	call_test_sub
+	movl	%ebp, %esp
+	popl	%ebp
+	ret
