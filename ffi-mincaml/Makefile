@@ -8,10 +8,10 @@ DEPS := lib.h
 OBJ := interp.s main.o lib.o libmincaml.o modwrap.o modcaml.o runtime.o
 
 $(APP): $(OBJ)
-	$(CC) $(CFLAGS) -rdynamic -I`ocamlc -where` -I. -L`ocamlc -where` -L/usr/lib32 $^ -o $@ -lm -ldl -lasmrun
+	$(CC) $(CFLAGS) -Wl,--export-dynamic -I`ocamlc -where` -I. -L`ocamlc -where` -L/usr/lib32 $^ -o $@ -lm -ldl -lasmrun
 
 clean:
-	$(RM) *.opt *.o *.cm* libadd.so $(APP)
+	$(RM) *.opt *.o *.cm* *.so $(APP)
 
 libadd.so: add.o
 	$(CC) -m32 -fPIC -shared -Wl,--export-dynamic -o $@ $<
