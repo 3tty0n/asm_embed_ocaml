@@ -2,10 +2,6 @@
 
 let rec interp stack sp code pc =
   jit_merge_point stack sp code pc;
-  if pc = 0 then
-    let _ = test_sub pc 3 2 in
-    interp stack sp code (pc + 2)
-  else
   let opcode = code.(pc) in
   if opcode = 1 then            (* ADD *)
     let v1 = stack.(sp - 1) in
@@ -50,7 +46,7 @@ let rec loop i =
     let s = get_current_micros () in
     let _ = interp stack 0 code 0 in
     let e = get_current_micros () in
-    print_int (e - s); print_newline ();
+    print_int (e-s); print_newline ();
     loop (i-1)
 in
 let _ = loop 10 in
