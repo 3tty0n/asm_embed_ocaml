@@ -1,8 +1,5 @@
 #define _GNU_SOURCE
 
-#define PROF_LEN 100
-#define THOLD 100
-
 #include <assert.h>
 #include <caml/alloc.h>
 #include <caml/callback.h>
@@ -19,6 +16,11 @@
 #include <uthash.h>
 
 #include <dlfcn.h>
+
+#define PROF_LEN 100
+#define THOLD 100
+
+#define JIT_COMPILE_COMMAND "gcc -m32 -fPIC"
 
 
 extern int call_test_add(int, int, int) asm("call_test_add");
@@ -93,6 +95,7 @@ struct prof *find_prof(int pc) {
 struct sym {
   char filename[1024]; // key
   char funcname[1024];  // value 1
+  fun_arg2 sym; // value 2
   UT_hash_handle hh;
 };
 
@@ -107,11 +110,12 @@ struct sym *syms = NULL;
 
 struct sym_pc *sym_pcs = NULL;
 
-void add_sym(char* filename, char* funcname) {
+void add_sym(char* filename, char* funcname, fun_arg2 sym) {
   struct sym *s;
   s = malloc(sizeof(struct sym));
   strcpy(s->filename, filename);
   strcpy(s->funcname, funcname);
+  s->sym = sym;
   HASH_ADD_STR(syms, filename, s);
 }
 
@@ -151,6 +155,7 @@ int call_dlfun_arg2(char *filename, char *funcname, int pc, int arg1,
   if (s) {
     printf("trace found at pc %d %s\n", pc, s->funcname);
     sym = (fun_arg2)dlsym(RTLD_DEFAULT, s->funcname);
+	//sym = s->sym;
     res = sym(arg1, arg2);
     printf("res: %d\n", res);
     return res;
@@ -160,16 +165,15 @@ int call_dlfun_arg2(char *filename, char *funcname, int pc, int arg1,
       fprintf(stderr, "error: dlopen %s\n", filename);
       return -1;
     }
-
     dlerror();
 
-    sym = (fun_arg2)dlsym(RTLD_DEFAULT, funcname);
+	sym = (fun_arg2)dlsym(RTLD_DEFAULT, funcname);
     if (sym == NULL) {
       fprintf(stderr, "error: dlsym \n");
       return -1;
     }
+	add_sym(filename, funcname, sym);
     printf("added sym:\t%s\t%d\n", filename, pc);
-    add_sym(filename, funcname);
     res = sym(arg1, arg2);
 
     return res;
@@ -180,14 +184,10 @@ void jit_compile(char* so, char* func, int pc) {
   char buffer[1024];
 
   printf("compiling shared object: %s\n", so);
-  sprintf(buffer,
-          "gcc -m32 -fPIC -c %s.s",
-          func);
+  sprintf(buffer, "%s -c %s.s", JIT_COMPILE_COMMAND,  func);
   system(buffer);
 
-  sprintf(buffer,
-          "gcc -m32 -fPIC -shared -rdynamic -o %s %s.o",
-          so, func);
+  sprintf(buffer, "%s -shared -rdynamic -o %s %s.o", JIT_COMPILE_COMMAND, so, func);
   system(buffer);
 
   return;
@@ -198,11 +198,12 @@ int call_jit_merge_point(int *stack, int sp, int *code, int pc) {
   struct prof *p;
   printf("pc: %d\n", pc);
 
-  if (pc == 0 || pc == 4) {
+  if (pc == 0 || pc == 4)
     strcpy(func, "add");
-  } else if (pc == 2 || pc == 5) {
+  else if (pc == 2 || pc == 5)
     strcpy(func, "sub");
-  }
+  else
+    return 0;
 
   p = find_prof(pc);
   if (p == NULL) {
