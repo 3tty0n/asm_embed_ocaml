@@ -1,11 +1,14 @@
 #define _GNU_SOURCE
 
 #include <assert.h>
+#define CAML_NAME_SPACE
 #include <caml/alloc.h>
+#include <caml/mlvalues.h>
+#include <caml/memory.h>
+#include <caml/custom.h>
 #include <caml/callback.h>
 #include <caml/compatibility.h>
-#include <caml/hash.h>
-#include <caml/mlvalues.h>
+#include <dlfcn.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -15,13 +18,12 @@
 #include <unistd.h>
 #include <uthash.h>
 
-#include <dlfcn.h>
+#include "modwrap.h"
 
 #define PROF_LEN 100
 #define THOLD 100
 
 #define JIT_COMPILE_COMMAND "gcc -m32 -fPIC"
-
 
 extern int call_test_add(int, int, int) asm("call_test_add");
 extern int call_test_sub(int, int, int) asm("call_test_sub");
@@ -58,8 +60,8 @@ void gen_so_name(char *buffer, char *tname) {
 }
 
 struct prof {
-  int pc;        // key
-  int count;     // value 1
+  int pc;             // key
+  int count;          // value 1
   char so_name[1024]; // value 2
 };
 
@@ -91,11 +93,10 @@ struct prof *find_prof(int pc) {
   return NULL;
 }
 
-
 struct sym {
   char filename[1024]; // key
-  char funcname[1024];  // value 1
-  fun_arg2 sym; // value 2
+  char funcname[1024]; // value 1
+  fun_arg2 sym;        // value 2
   UT_hash_handle hh;
 };
 
@@ -110,7 +111,7 @@ struct sym *syms = NULL;
 
 struct sym_pc *sym_pcs = NULL;
 
-void add_sym(char* filename, char* funcname, fun_arg2 sym) {
+void add_sym(char *filename, char *funcname, fun_arg2 sym) {
   struct sym *s;
   s = malloc(sizeof(struct sym));
   strcpy(s->filename, filename);
@@ -156,7 +157,6 @@ int call_dlfun_arg2(char *filename, char *funcname, int pc, int arg1,
   sym = sym_arr[pc];
   if (sym) {
     printf("trace found at pc %d %s\n", pc, funcname);
-    //sym = s->sym;
     res = sym(arg1, arg2);
     printf("res: %d\n", res);
     return res;
@@ -173,7 +173,6 @@ int call_dlfun_arg2(char *filename, char *funcname, int pc, int arg1,
       fprintf(stderr, "error: dlsym \n");
       return -1;
     }
-    //add_sym(filename, funcname, sym);
     sym_arr[pc] = sym;
     printf("added sym:\t%s\t%d\n", filename, pc);
     res = sym(arg1, arg2);
@@ -182,21 +181,24 @@ int call_dlfun_arg2(char *filename, char *funcname, int pc, int arg1,
   }
 }
 
-void jit_compile(char* so, char* func, int pc) {
+void jit_compile(char *so, char *func, int pc) {
   char buffer[1024];
 
   printf("compiling shared object: %s\n", so);
-  sprintf(buffer, "%s -c %s.s", JIT_COMPILE_COMMAND,  func);
+  sprintf(buffer, "%s -c %s.s", JIT_COMPILE_COMMAND, func);
   system(buffer);
 
-  sprintf(buffer, "%s -shared -rdynamic -o %s %s.o", JIT_COMPILE_COMMAND, so, func);
+  sprintf(buffer, "%s -shared -rdynamic -o %s %s.o", JIT_COMPILE_COMMAND, so,
+          func);
   system(buffer);
 
   return;
 }
 
 int call_jit_merge_point(int *stack, int sp, int *code, int pc) {
-  char tname[1024]; char so[1024]; char func[10];
+  char tname[1024];
+  char so[1024];
+  char func[10];
   struct prof *p;
   printf("pc: %d\n", pc);
 
@@ -221,4 +223,30 @@ int call_jit_merge_point(int *stack, int sp, int *code, int pc) {
     return x;
   }
   return 0;
+}
+
+value init_f(int x) { return Val_int(x); }
+
+value bytecode = NULL;
+
+void call_caml_jit_exec(int *stack, int sp, int *code, int pc) {
+  CAMLparam4(stack, sp, code, pc);
+  value res;
+  value ml_args[6];
+
+  static const *jit_entry_clsr = NULL;
+  if (jit_entry_clsr == NULL)
+    caml_named_value("caml_jit_entry");
+
+  if (bytecode == NULL)
+    bytecode = caml_alloc_array(init_f, code);
+
+  ml_args[0] = caml_alloc_array(init_f, stack);
+  ml_args[1] = Val_int(sp);
+  ml_args[2] = bytecode;
+  ml_args[3] = Val_int(pc);
+  ml_args[4] = Val_hp(stack);
+  ml_args[5] = Val_hp(code);
+  res = caml_callbackN(jit_entry_clsr, 6, ml_args);
+  return;
 }

@@ -5,22 +5,20 @@ MINCAML := min-caml
 
 APP := prog
 DEPS := lib.h
-OBJ := interp.s main.o lib.o libmincaml.o modwrap.o modcaml.o runtime.o
+OBJ := interp.s main.o lib.o libmincaml.o runtime.o modcaml.o
+LIBS := mod.a
 
 $(APP): $(OBJ)
-	$(CC) $(CFLAGS) -Wl,--export-dynamic -I`ocamlc -where` -I. -L`ocamlc -where` -L/usr/lib32 $^ -o $@ -lm -ldl -lasmrun
+	gcc -m32 -g $^ -lasmrun -ldl -lm -o prog -L`ocamlc -where` -I`ocamlc -where` -rdynamic
+
+%.o: %.c
+	$(CC) $(CFLAGS) -Wall -Wextra -c $< -I`ocamlc where`
 
 clean:
-	$(RM) *.opt *.o *.cm* *.so $(APP)
-
-libadd.so: add.o
-	$(CC) -m32 -fPIC -shared -Wl,--export-dynamic -o $@ $<
-
-add.o: add.s
-	$(CC) $(CFLAGS) -fPIC -c -o $@ $<
+	$(RM) *.opt *.o *.cm* *.so $(APP) $(LIBS)
 
 %.o: %.S
-	$(CC) $(CFLAGS) -lm -c $<
+	$(CC) $(CFLAGS) -lm -ldl -c $<
 
 %.s: %.ml
 	$(MINCAML) $<

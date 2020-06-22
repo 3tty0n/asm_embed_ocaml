@@ -274,15 +274,3 @@ min_caml_jit_merge_point:
 	movl	%ebp, %esp
 	popl	%ebp
 	ret
-.globl min_caml_test_dummy
-min_caml_test_dummy:
-	pushl	%ebp
-	movl	%esp, %ebp
-	pushl	%edx
-	pushl	%ecx
-	pushl	%ebx
-	pushl	%eax
-	call	call_test_dummy
-	movl	%ebp, %esp
-	popl	%ebp
-	ret
