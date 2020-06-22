@@ -3,8 +3,8 @@ CFLAGS := -m32
 OCAMLOPT := ocamlopt
 MINCAML := min-caml
 
-interp.opt: interp.s main.o libmincaml.o
-	$(CC) $(CFLAGS) -lm -I`ocamlc -where` $^ -o $@
+interp.opt: interp.s main.o libmincaml.o interop.o
+	$(CC) $(CFLAGS) -lm -I`ocamlc -where` -L`ocamlc -where` $^ -o $@ -lcurses -ldl -lasmrun
 
 clean:
 	$(RM) *.opt *.o
