@@ -259,6 +259,9 @@ min_caml_fnegd:
 .globl min_caml_hp
 min_caml_hp:
 	.long	0x0
+.globl min_caml_bp
+min_caml_bp:
+  .long 0x0
 .globl min_caml_jit_merge_point
 min_caml_jit_merge_point:
 	pushl	%ebp
