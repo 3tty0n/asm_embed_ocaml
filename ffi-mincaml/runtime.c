@@ -145,17 +145,18 @@ struct sym_pc *find_sym_pc(int pc) {
   return s;
 }
 
+fun_arg2 sym_arr[2048] = {NULL};
+
 int call_dlfun_arg2(char *filename, char *funcname, int pc, int arg1,
                     int arg2) {
   fun_arg2 sym = NULL;
   void *handle = NULL;
   int res;
 
-  struct sym *s = find_sym(filename);
-  if (s) {
-    printf("trace found at pc %d %s\n", pc, s->funcname);
-    sym = (fun_arg2)dlsym(RTLD_DEFAULT, s->funcname);
-	//sym = s->sym;
+  sym = sym_arr[pc];
+  if (sym) {
+    printf("trace found at pc %d %s\n", pc, funcname);
+    //sym = s->sym;
     res = sym(arg1, arg2);
     printf("res: %d\n", res);
     return res;
@@ -167,12 +168,13 @@ int call_dlfun_arg2(char *filename, char *funcname, int pc, int arg1,
     }
     dlerror();
 
-	sym = (fun_arg2)dlsym(RTLD_DEFAULT, funcname);
+    sym = (fun_arg2)dlsym(RTLD_DEFAULT, funcname);
     if (sym == NULL) {
       fprintf(stderr, "error: dlsym \n");
       return -1;
     }
-	add_sym(filename, funcname, sym);
+    //add_sym(filename, funcname, sym);
+    sym_arr[pc] = sym;
     printf("added sym:\t%s\t%d\n", filename, pc);
     res = sym(arg1, arg2);
 
