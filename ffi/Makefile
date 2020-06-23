@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS :=
+CFLAGS := -m32
 OCAMLC := ocamlopt
 
 ifdef 32bit
@@ -24,7 +24,7 @@ OBJS := $(CSRCS:%.c=%.o) $(MLSRCS:%.ml=%.o)
 
 $(APP): $(OBJS)
 	$(eval ocamlc_where := $(shell ocamlc -where))
-	$(CC) $(CFLAGS) -o $@ $^ -L$(ocamlc_where) -lm -ldl
+	$(CC) $(CFLAGS) -o $@ $^ -L`ocamlc -where` -I`ocamlc -where` -lm -ldl -lasmrun
 
 clean:
 	$(RM) $(APP) $(OBJS) *.cm*
