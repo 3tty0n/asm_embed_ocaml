@@ -25,4 +25,4 @@ $(APP): $(OBJ)
 
 .PHONY: clean
 clean:
-	$(RM) *.opt *.o *.cm* *.so $(APP) $(LIBS)
+	$(RM) interp.s *.opt *.o *.cm* *.so $(APP) $(LIBS)
