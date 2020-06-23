@@ -192,23 +192,19 @@ void jit_compile(char *so, char *func, int pc) {
   return;
 }
 
-int call_jit_merge_point(int *stack, int sp, int *code, int pc) {
-  char tname[1024];
-  char so[1024];
+void call_jit_merge_point(int *stack, int sp, int *code, int pc) {
+  char tname[136];
+  char so[136];
   char func[10];
   struct prof *p;
   printf("pc: %d\n", pc);
 
   printf("fib(10) = %d\n", fib(10));
 
-  //jit_entry(stack, sp, code, pc);
-
   if (pc == 0 || pc == 4)
     strcpy(func, "add");
   else if (pc == 2 || pc == 5)
     strcpy(func, "sub");
-  else
-    return 0;
 
   p = find_prof(pc);
   if (p == NULL) {
@@ -217,11 +213,11 @@ int call_jit_merge_point(int *stack, int sp, int *code, int pc) {
     jit_compile(so, func, pc);
     insert_prof(pc, 0, so);
     int x = call_dlfun_arg2(so, func, pc, 3, 3);
-    return x;
+    return;
   } else {
     strcpy(so, p->so_name);
     int x = call_dlfun_arg2(so, func, pc, 3, 3);
-    return x;
+    return;
   }
-  return 0;
+  return;
 }

@@ -1,6 +1,6 @@
 let rec fib n = if n < 2 then 1 else fib(n-1) + fib(n-2)
 
-let jit_entry stack sp code pc =
+let rec jit_entry stack sp code pc =
   print_string "pc in caml: "; print_int pc; print_newline ();
   ()
 

@@ -1,7 +1,7 @@
 CC := gcc
 CFLAGS := -m32 -O2 -g
 OCAMLOPT := ocamlopt
-MINCAML := min-caml
+MINCAML := ../min-caml/min-caml
 
 APP := prog
 DEPS := lib.h
@@ -18,7 +18,7 @@ $(APP): $(OBJ)
 	$(CC) $(CFLAGS) -lm -ldl -c $<
 
 %.s: %.ml
-	$(MINCAML) $<
+	$(MINCAML) $(basename $<)
 
 %caml.o: %.ml
 	$(OCAMLOPT) -output-obj -o $@ $<

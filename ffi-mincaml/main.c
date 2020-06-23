@@ -15,7 +15,8 @@ FILE *min_caml_stderr;
 int main(int argc, char *argv[]) {
   char *hp, *sp;
 
-  caml_main(argv);
+  //caml_main(argv);
+  caml_startup(argv);
 
   min_caml_stderr = stderr;
   sp = alloca(1000000); hp = malloc(4000000);

@@ -1,6 +1,7 @@
 (* let rec jit_merge_point _ _ _ _ = () ;; *)
 
 let rec interp stack sp code pc =
+  (* can_enter_jit stack sp code pc; *)
   jit_merge_point stack sp code pc;
   let opcode = code.(pc) in
   if opcode = 1 then            (* ADD *)
@@ -35,7 +36,7 @@ let rec interp stack sp code pc =
     stack.(sp - 1)
   else
     -1000
-;;
+in
 
 let stack = Array.make 50 (-1) in
 let code = Array.make 6 0 in
