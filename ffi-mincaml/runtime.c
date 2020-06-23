@@ -145,37 +145,27 @@ struct sym_pc *find_sym_pc(int pc) {
 
 fun_arg2 sym_arr[2048] = {NULL};
 
-int call_dlfun_arg2(char *filename, char *funcname, int pc, int arg1,
+fun_arg2 call_dlfun_arg2(char *filename, char *funcname, int pc, int arg1,
                     int arg2) {
   fun_arg2 sym = NULL;
   void *handle = NULL;
   int res;
 
-  sym = sym_arr[pc];
-  if (sym) {
-    printf("trace found at pc %d %s\n", pc, funcname);
-    res = sym(arg1, arg2);
-    printf("res: %d\n", res);
-    return res;
-  } else {
-    handle = dlopen(filename, RTLD_LAZY | RTLD_GLOBAL);
-    if (handle == NULL) {
-      fprintf(stderr, "error: dlopen %s\n", filename);
-      return -1;
-    }
-    dlerror();
-
-    sym = (fun_arg2)dlsym(RTLD_DEFAULT, funcname);
-    if (sym == NULL) {
-      fprintf(stderr, "error: dlsym \n");
-      return -1;
-    }
-    sym_arr[pc] = sym;
-    printf("added sym:\t%s\t%d\n", filename, pc);
-    res = sym(arg1, arg2);
-
-    return res;
+  handle = dlopen(filename, RTLD_LAZY | RTLD_GLOBAL);
+  if (handle == NULL) {
+	fprintf(stderr, "error: dlopen %s\n", filename);
+	return NULL;
   }
+  dlerror();
+
+  sym = (fun_arg2)dlsym(RTLD_DEFAULT, funcname);
+  if (sym == NULL) {
+	fprintf(stderr, "error: dlsym \n");
+	return NULL;
+  }
+  sym_arr[pc] = sym;
+  printf("added sym:\t%s\t%d\n", filename, pc);
+  return sym;
 }
 
 void jit_compile(char *so, char *func, int pc) {
@@ -197,27 +187,27 @@ void call_jit_merge_point(int *stack, int sp, int *code, int pc) {
   char so[136];
   char func[10];
   struct prof *p;
-  printf("pc: %d\n", pc);
+  fun_arg2 sym = NULL;
+  int res;
 
-  printf("fib(10) = %d\n", fib(10));
+  printf("pc: %d\n", pc);
 
   if (pc == 0 || pc == 4)
     strcpy(func, "add");
-  else if (pc == 2 || pc == 5)
+  else if (pc == 2)
     strcpy(func, "sub");
 
-  p = find_prof(pc);
-  if (p == NULL) {
+  sym = sym_arr[pc];
+  if (sym == NULL) {
     gen_trace_name(tname, TJ);
     gen_so_name(so, tname);
     jit_compile(so, func, pc);
     insert_prof(pc, 0, so);
-    int x = call_dlfun_arg2(so, func, pc, 3, 3);
-    return;
+    sym = call_dlfun_arg2(so, func, pc, 3, 3);
   } else {
-    strcpy(so, p->so_name);
-    int x = call_dlfun_arg2(so, func, pc, 3, 3);
-    return;
+	printf("found sym\n");
   }
+  res = sym(3, 3);
+  printf("result: %d\n", res);
   return;
 }
