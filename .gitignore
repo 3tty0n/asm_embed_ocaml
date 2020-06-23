@@ -1,8 +1,10 @@
-*.o
 *.cm*
-*.opt
 *.a
 *.so
+
+*.o
+*.s
+*.opt
 
 .merlin
 
