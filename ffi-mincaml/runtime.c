@@ -202,6 +202,8 @@ int call_jit_merge_point(int *stack, int sp, int *code, int pc) {
   struct prof *p;
   printf("pc: %d\n", pc);
 
+  printf("fib(10) = %d\n", fib(10));
+
   if (pc == 0 || pc == 4)
     strcpy(func, "add");
   else if (pc == 2 || pc == 5)
@@ -223,30 +225,4 @@ int call_jit_merge_point(int *stack, int sp, int *code, int pc) {
     return x;
   }
   return 0;
-}
-
-value init_f(int x) { return Val_int(x); }
-
-value bytecode = NULL;
-
-void call_caml_jit_exec(int *stack, int sp, int *code, int pc) {
-  CAMLparam4(stack, sp, code, pc);
-  value res;
-  value ml_args[6];
-
-  static const *jit_entry_clsr = NULL;
-  if (jit_entry_clsr == NULL)
-    caml_named_value("caml_jit_entry");
-
-  if (bytecode == NULL)
-    bytecode = caml_alloc_array(init_f, code);
-
-  ml_args[0] = caml_alloc_array(init_f, stack);
-  ml_args[1] = Val_int(sp);
-  ml_args[2] = bytecode;
-  ml_args[3] = Val_int(pc);
-  ml_args[4] = Val_hp(stack);
-  ml_args[5] = Val_hp(code);
-  res = caml_callbackN(jit_entry_clsr, 6, ml_args);
-  return;
 }

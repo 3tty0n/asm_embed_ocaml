@@ -2,6 +2,13 @@
 #include <caml/alloc.h>
 #include <caml/callback.h>
 #include <caml/mlvalues.h>
+#include <caml/memory.h>
+
+int fib(int n) {
+  static const value * fib_closure = NULL;
+  if (fib_closure == NULL) fib_closure = caml_named_value("fib");
+  return Int_val(caml_callback(*fib_closure, Val_int(n)));
+}
 
 value init_f(int x) { return Val_int(x); }
 
@@ -11,7 +18,6 @@ void call_caml_jit_exec(int *stack, int sp, int *code, int pc) {
   CAMLparam4(stack, sp, code, pc);
   value res;
   value ml_args[6];
-  CAMLLocal(res, ml_args);
 
   static const *jit_entry_clsr = NULL;
   if (jit_entry_clsr == NULL)
