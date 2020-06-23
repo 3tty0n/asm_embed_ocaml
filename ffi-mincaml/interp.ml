@@ -38,7 +38,10 @@ let rec interp stack sp code pc =
 ;;
 
 let stack = Array.make 50 (-1) in
-let code = [|5; 1; 5; 2; 1; 9|] in
+let code = Array.make 6 0 in
+code.(0) <- 5; code.(1) <- 1;
+code.(2) <- 5; code.(3) <- 2;
+code.(4) <- 9;
 (* let res = interp stack 0 code 0 in print_int res *)
 let rec loop i =
   if i = 0 then ()

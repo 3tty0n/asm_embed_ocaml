@@ -3,6 +3,6 @@
 
 int fib(int);
 
-void call_caml_jit_exec(int *, int, int *, int);
+void jit_entry(int*, int, int*, int);
 
 #endif /* MODWRAP_DOT_H */

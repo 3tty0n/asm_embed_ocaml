@@ -25,9 +25,6 @@
 
 #define JIT_COMPILE_COMMAND "gcc -m32 -fPIC"
 
-extern int call_test_add(int, int, int) asm("call_test_add");
-extern int call_test_sub(int, int, int) asm("call_test_sub");
-
 typedef int (*fun_arg2)(int, int);
 
 enum jit_type { TJ, MJ };
@@ -203,6 +200,8 @@ int call_jit_merge_point(int *stack, int sp, int *code, int pc) {
   printf("pc: %d\n", pc);
 
   printf("fib(10) = %d\n", fib(10));
+
+  //jit_entry(stack, sp, code, pc);
 
   if (pc == 0 || pc == 4)
     strcpy(func, "add");
